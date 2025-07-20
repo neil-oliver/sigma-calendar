@@ -48,6 +48,134 @@ function App() {
     hasEventClickTrigger: !!triggerEventClick
   });
 
+  // Function to apply theme colors to CSS custom properties
+  const applyThemeColors = (theme, customColors = null) => {
+    // Import preset themes from Settings
+    const PRESET_THEMES = {
+      light: {
+        colors: {
+          '--background': '0 0% 100%',
+          '--foreground': '240 10% 3.9%',
+          '--card': '0 0% 100%',
+          '--card-foreground': '240 10% 3.9%',
+          '--popover': '0 0% 100%',
+          '--popover-foreground': '240 10% 3.9%',
+          '--primary': '240 9% 9%',
+          '--primary-foreground': '0 0% 98%',
+          '--secondary': '240 4.8% 95.9%',
+          '--secondary-foreground': '240 5.9% 10%',
+          '--muted': '240 4.8% 95.9%',
+          '--muted-foreground': '240 3.8% 46.1%',
+          '--accent': '240 4.8% 95.9%',
+          '--accent-foreground': '240 5.9% 10%',
+          '--destructive': '0 84.2% 60.2%',
+          '--destructive-foreground': '0 0% 98%',
+          '--border': '240 5.9% 90%',
+          '--input': '240 5.9% 90%',
+          '--ring': '240 5% 64.9%',
+        }
+      },
+      dark: {
+        colors: {
+          '--background': '240 10% 3.9%',
+          '--foreground': '0 0% 98%',
+          '--card': '240 10% 3.9%',
+          '--card-foreground': '0 0% 98%',
+          '--popover': '240 10% 3.9%',
+          '--popover-foreground': '0 0% 98%',
+          '--primary': '0 0% 98%',
+          '--primary-foreground': '240 9% 9%',
+          '--secondary': '240 3.7% 15.9%',
+          '--secondary-foreground': '0 0% 98%',
+          '--muted': '240 3.7% 15.9%',
+          '--muted-foreground': '240 5% 64.9%',
+          '--accent': '240 3.7% 15.9%',
+          '--accent-foreground': '0 0% 98%',
+          '--destructive': '0 62.8% 30.6%',
+          '--destructive-foreground': '0 0% 98%',
+          '--border': '240 3.7% 15.9%',
+          '--input': '240 3.7% 15.9%',
+          '--ring': '240 4.9% 83.9%',
+        }
+      },
+      blue: {
+        colors: {
+          '--background': '210 40% 98%',
+          '--foreground': '222.2 84% 4.9%',
+          '--card': '210 40% 98%',
+          '--card-foreground': '222.2 84% 4.9%',
+          '--popover': '210 40% 98%',
+          '--popover-foreground': '222.2 84% 4.9%',
+          '--primary': '221.2 83.2% 53.3%',
+          '--primary-foreground': '210 40% 98%',
+          '--secondary': '210 40% 96%',
+          '--secondary-foreground': '222.2 84% 4.9%',
+          '--muted': '210 40% 96%',
+          '--muted-foreground': '215.4 16.3% 46.9%',
+          '--accent': '210 40% 96%',
+          '--accent-foreground': '222.2 84% 4.9%',
+          '--destructive': '0 84.2% 60.2%',
+          '--destructive-foreground': '210 40% 98%',
+          '--border': '214.3 31.8% 91.4%',
+          '--input': '214.3 31.8% 91.4%',
+          '--ring': '221.2 83.2% 53.3%',
+        }
+      },
+      green: {
+        colors: {
+          '--background': '140 40% 98%',
+          '--foreground': '140 10% 4.9%',
+          '--card': '140 40% 98%',
+          '--card-foreground': '140 10% 4.9%',
+          '--popover': '140 40% 98%',
+          '--popover-foreground': '140 10% 4.9%',
+          '--primary': '142.1 76.2% 36.3%',
+          '--primary-foreground': '355.7 100% 97.3%',
+          '--secondary': '140 40% 96%',
+          '--secondary-foreground': '140 10% 4.9%',
+          '--muted': '140 40% 96%',
+          '--muted-foreground': '140 5% 46.9%',
+          '--accent': '140 40% 96%',
+          '--accent-foreground': '140 10% 4.9%',
+          '--destructive': '0 84.2% 60.2%',
+          '--destructive-foreground': '140 40% 98%',
+          '--border': '140 30% 91.4%',
+          '--input': '140 30% 91.4%',
+          '--ring': '142.1 76.2% 36.3%',
+        }
+      },
+      purple: {
+        colors: {
+          '--background': '270 40% 98%',
+          '--foreground': '270 10% 4.9%',
+          '--card': '270 40% 98%',
+          '--card-foreground': '270 10% 4.9%',
+          '--popover': '270 40% 98%',
+          '--popover-foreground': '270 10% 4.9%',
+          '--primary': '262.1 83.3% 57.8%',
+          '--primary-foreground': '270 40% 98%',
+          '--secondary': '270 40% 96%',
+          '--secondary-foreground': '270 10% 4.9%',
+          '--muted': '270 40% 96%',
+          '--muted-foreground': '270 5% 46.9%',
+          '--accent': '270 40% 96%',
+          '--accent-foreground': '270 10% 4.9%',
+          '--destructive': '0 84.2% 60.2%',
+          '--destructive-foreground': '270 40% 98%',
+          '--border': '270 30% 91.4%',
+          '--input': '270 30% 91.4%',
+          '--ring': '262.1 83.3% 57.8%',
+        }
+      }
+    };
+
+    const colors = customColors || (PRESET_THEMES[theme]?.colors || PRESET_THEMES.light.colors);
+    
+    Object.entries(colors).forEach(([property, value]) => {
+      document.documentElement.style.setProperty(property, value);
+    });
+  };
+
   // Parse config JSON and load settings
   useEffect(() => {
     if (config.config && config.config.trim()) {
@@ -63,6 +191,17 @@ function App() {
       setSettings(DEFAULT_SETTINGS);
     }
   }, [config.config]);
+
+  // Apply theme on settings change
+  useEffect(() => {
+    if (settings.styling?.enableDynamicTheming !== false) {
+      if (settings.styling?.theme === 'custom') {
+        applyThemeColors('custom', settings.styling.customColors);
+      } else if (settings.styling?.theme) {
+        applyThemeColors(settings.styling.theme);
+      }
+    }
+  }, [settings.styling]);
 
   // Process calendar data with column information
   const calendarData = processCalendarData(sigmaData, config, settings, elementColumns);
