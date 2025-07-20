@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Button } from './components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
+import Tooltip, { EventTooltip, DateTooltip } from './components/ui/tooltip';
+import EventDetailModal, { EventPreviewModal } from './components/EventDetailModal';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -34,6 +36,9 @@ import { getEventsForDate } from './utils/dataProcessor';
 function CalendarView({ data, settings, onEventClick }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState(settings.defaultView || 'month');
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   // Navigation functions
   const navigatePrevious = () => {
@@ -78,6 +83,29 @@ function CalendarView({ data, settings, onEventClick }) {
     setCurrentDate(new Date());
   };
 
+  // Modal handling functions
+  const handleEventModalOpen = (event) => {
+    setSelectedEvent(event);
+    setShowEventModal(true);
+  };
+
+  const handleEventPreviewOpen = (event) => {
+    setSelectedEvent(event);
+    setShowPreviewModal(true);
+  };
+
+  const handleEventAction = (eventId, date) => {
+    if (onEventClick) {
+      onEventClick(eventId, date);
+    }
+  };
+
+  const handleDateClick = (date) => {
+    if (onEventClick) {
+      onEventClick(null, format(date, 'yyyy-MM-dd'));
+    }
+  };
+
   // Get title based on current view and date
   const getTitle = () => {
     switch (currentView) {
@@ -98,42 +126,27 @@ function CalendarView({ data, settings, onEventClick }) {
 
   // Render the appropriate view
   const renderView = () => {
+    const commonProps = {
+      currentDate,
+      events: data.events,
+      settings,
+      onEventClick: handleEventAction,
+      onEventModalOpen: handleEventModalOpen,
+      onEventPreviewOpen: handleEventPreviewOpen,
+      onDateClick: handleDateClick
+    };
+
     switch (currentView) {
       case 'month':
-        return <MonthView 
-          currentDate={currentDate} 
-          events={data.events} 
-          settings={settings}
-          onEventClick={onEventClick}
-        />;
+        return <MonthView {...commonProps} />;
       case 'week':
-        return <WeekView 
-          currentDate={currentDate} 
-          events={data.events} 
-          settings={settings}
-          onEventClick={onEventClick}
-        />;
+        return <WeekView {...commonProps} />;
       case 'day':
-        return <DayView 
-          currentDate={currentDate} 
-          events={data.events} 
-          settings={settings}
-          onEventClick={onEventClick}
-        />;
+        return <DayView {...commonProps} />;
       case 'year':
-        return <YearView 
-          currentDate={currentDate} 
-          events={data.events} 
-          settings={settings}
-          onEventClick={onEventClick}
-        />;
+        return <YearView {...commonProps} />;
       default:
-        return <MonthView 
-          currentDate={currentDate} 
-          events={data.events} 
-          settings={settings}
-          onEventClick={onEventClick}
-        />;
+        return <MonthView {...commonProps} />;
     }
   };
 
@@ -205,12 +218,40 @@ function CalendarView({ data, settings, onEventClick }) {
       <div className="flex-1 overflow-auto">
         {renderView()}
       </div>
+
+      {/* Event Modals */}
+      <EventDetailModal
+        event={selectedEvent}
+        isOpen={showEventModal}
+        onClose={() => setShowEventModal(false)}
+        onEventAction={handleEventAction}
+        settings={settings}
+      />
+      
+      <EventPreviewModal
+        event={selectedEvent}
+        isOpen={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        onViewDetails={() => {
+          setShowPreviewModal(false);
+          setShowEventModal(true);
+        }}
+        onEventAction={handleEventAction}
+      />
     </div>
   );
 }
 
 // Month View Component
-function MonthView({ currentDate, events, settings, onEventClick }) {
+function MonthView({ 
+  currentDate, 
+  events, 
+  settings, 
+  onEventClick, 
+  onEventModalOpen, 
+  onEventPreviewOpen, 
+  onDateClick 
+}) {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: settings.weekStartsOn });
@@ -251,26 +292,59 @@ function MonthView({ currentDate, events, settings, onEventClick }) {
                 ${isTodayDate ? 'bg-blue-50 dark:bg-blue-950/20' : ''}
               `}
             >
-              {/* Day number */}
-              <div className={`
-                text-sm font-medium mb-1
-                ${isTodayDate ? 'text-blue-600 dark:text-blue-400' : ''}
-              `}>
-                {format(day, 'd')}
-              </div>
+              {/* Day number with date tooltip */}
+              {settings.showDateTooltips ? (
+                <DateTooltip date={day} onDateClick={onDateClick}>
+                  <div className={`
+                    text-sm font-medium mb-1 cursor-pointer hover:bg-muted/30 rounded px-1 py-0.5
+                    ${isTodayDate ? 'text-blue-600 dark:text-blue-400' : ''}
+                  `}>
+                    {format(day, 'd')}
+                  </div>
+                </DateTooltip>
+              ) : (
+                <div 
+                  className={`
+                    text-sm font-medium mb-1 cursor-pointer hover:bg-muted/30 rounded px-1 py-0.5
+                    ${isTodayDate ? 'text-blue-600 dark:text-blue-400' : ''}
+                  `}
+                  onClick={() => onDateClick && onDateClick(day)}
+                >
+                  {format(day, 'd')}
+                </div>
+              )}
 
               {/* Events */}
               <div className="flex-1 space-y-1">
-                {dayEvents.slice(0, settings.dayMaxEvents || 3).map((event) => (
-                  <EventChip
-                    key={`${event.id}-${day.toISOString()}`}
-                    event={event}
-                    onClick={() => onEventClick && onEventClick(event.id, format(day, 'yyyy-MM-dd'))}
-                    compact={true}
-                  />
-                ))}
+                {dayEvents.slice(0, settings.dayMaxEvents || 3).map((event) => {
+                  const eventChip = (
+                    <EventChip
+                      event={event}
+                      onClick={() => onEventClick && onEventClick(event.id, format(day, 'yyyy-MM-dd'))}
+                      compact={true}
+                    />
+                  );
+
+                  // Respect interaction mode settings
+                  if (!settings.showEventTooltips || settings.eventInteractionMode === 'modal') {
+                    return <div key={`${event.id}-${day.toISOString()}`}>{eventChip}</div>;
+                  }
+
+                  return (
+                    <EventTooltip 
+                      key={`${event.id}-${day.toISOString()}`} 
+                      event={event}
+                      delay={settings.tooltipDelay}
+                    >
+                      {eventChip}
+                    </EventTooltip>
+                  );
+                })}
                 {dayEvents.length > (settings.dayMaxEvents || 3) && (
-                  <div className="text-xs text-muted-foreground">
+                  <div 
+                    className="text-xs text-muted-foreground cursor-pointer hover:text-foreground"
+                    onClick={() => onEventPreviewOpen && onEventPreviewOpen(dayEvents[settings.dayMaxEvents || 3])}
+                  >
                     +{dayEvents.length - (settings.dayMaxEvents || 3)} more
                   </div>
                 )}
@@ -284,7 +358,15 @@ function MonthView({ currentDate, events, settings, onEventClick }) {
 }
 
 // Week View Component
-function WeekView({ currentDate, events, settings, onEventClick }) {
+function WeekView({ 
+  currentDate, 
+  events, 
+  settings, 
+  onEventClick, 
+  onEventModalOpen, 
+  onEventPreviewOpen, 
+  onDateClick 
+}) {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: settings.weekStartsOn });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: settings.weekStartsOn });
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
@@ -293,19 +375,31 @@ function WeekView({ currentDate, events, settings, onEventClick }) {
     <div className="h-full flex flex-col">
       {/* Week day headers */}
       <div className="grid grid-cols-7 border-b border-border">
-        {days.map((day) => (
-          <div key={day.toISOString()} className="p-3 text-center border-r border-border last:border-r-0">
-            <div className="text-sm font-medium text-muted-foreground">
-              {format(day, 'EEE')}
+        {days.map((day) => {
+          const dayHeader = (
+            <div className="p-3 text-center border-r border-border last:border-r-0 cursor-pointer hover:bg-muted/30">
+              <div className="text-sm font-medium text-muted-foreground">
+                {format(day, 'EEE')}
+              </div>
+              <div className={`
+                text-lg font-semibold mt-1
+                ${isToday(day) ? 'text-blue-600 dark:text-blue-400' : ''}
+              `}>
+                {format(day, 'd')}
+              </div>
             </div>
-            <div className={`
-              text-lg font-semibold mt-1
-              ${isToday(day) ? 'text-blue-600 dark:text-blue-400' : ''}
-            `}>
-              {format(day, 'd')}
+          );
+
+          return settings.showDateTooltips ? (
+            <DateTooltip key={day.toISOString()} date={day} onDateClick={onDateClick}>
+              {dayHeader}
+            </DateTooltip>
+          ) : (
+            <div key={day.toISOString()} onClick={() => onDateClick && onDateClick(day)}>
+              {dayHeader}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Week grid */}
@@ -322,14 +416,30 @@ function WeekView({ currentDate, events, settings, onEventClick }) {
               `}
             >
               <div className="space-y-1">
-                {dayEvents.map((event) => (
-                  <EventChip
-                    key={`${event.id}-${day.toISOString()}`}
-                    event={event}
-                    onClick={() => onEventClick && onEventClick(event.id, format(day, 'yyyy-MM-dd'))}
-                    compact={false}
-                  />
-                ))}
+                {dayEvents.map((event) => {
+                  const eventChip = (
+                    <EventChip
+                      event={event}
+                      onClick={() => onEventClick && onEventClick(event.id, format(day, 'yyyy-MM-dd'))}
+                      compact={false}
+                    />
+                  );
+
+                  // Respect interaction mode settings
+                  if (!settings.showEventTooltips || settings.eventInteractionMode === 'modal') {
+                    return <div key={`${event.id}-${day.toISOString()}`}>{eventChip}</div>;
+                  }
+
+                  return (
+                    <EventTooltip 
+                      key={`${event.id}-${day.toISOString()}`} 
+                      event={event}
+                      delay={settings.tooltipDelay}
+                    >
+                      {eventChip}
+                    </EventTooltip>
+                  );
+                })}
               </div>
             </div>
           );
@@ -340,7 +450,15 @@ function WeekView({ currentDate, events, settings, onEventClick }) {
 }
 
 // Day View Component
-function DayView({ currentDate, events, settings, onEventClick }) {
+function DayView({ 
+  currentDate, 
+  events, 
+  settings, 
+  onEventClick, 
+  onEventModalOpen, 
+  onEventPreviewOpen, 
+  onDateClick 
+}) {
   const dayEvents = getEventsForDate(events, currentDate);
 
   return (
@@ -356,7 +474,8 @@ function DayView({ currentDate, events, settings, onEventClick }) {
               <EventCard
                 key={event.id}
                 event={event}
-                onClick={() => onEventClick && onEventClick(event.id, format(currentDate, 'yyyy-MM-dd'))}
+                onClick={() => onEventModalOpen && onEventModalOpen(event)}
+                onSecondaryClick={() => onEventClick && onEventClick(event.id, format(currentDate, 'yyyy-MM-dd'))}
               />
             ))
           )}
@@ -367,7 +486,15 @@ function DayView({ currentDate, events, settings, onEventClick }) {
 }
 
 // Year View Component
-function YearView({ currentDate, events, settings, onEventClick }) {
+function YearView({ 
+  currentDate, 
+  events, 
+  settings, 
+  onEventClick, 
+  onEventModalOpen, 
+  onEventPreviewOpen, 
+  onDateClick 
+}) {
   const yearStart = startOfYear(currentDate);
   const yearEnd = endOfYear(currentDate);
   const months = eachMonthOfInterval({ start: yearStart, end: yearEnd });
@@ -382,6 +509,8 @@ function YearView({ currentDate, events, settings, onEventClick }) {
             events={events}
             settings={settings}
             onEventClick={onEventClick}
+            onEventPreviewOpen={onEventPreviewOpen}
+            onDateClick={onDateClick}
           />
         ))}
       </div>
@@ -390,7 +519,14 @@ function YearView({ currentDate, events, settings, onEventClick }) {
 }
 
 // Mini Month View for Year View
-function MiniMonthView({ month, events, settings, onEventClick }) {
+function MiniMonthView({ 
+  month, 
+  events, 
+  settings, 
+  onEventClick, 
+  onEventPreviewOpen, 
+  onDateClick 
+}) {
   const monthStart = startOfMonth(month);
   const monthEnd = endOfMonth(month);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: settings.weekStartsOn });
@@ -417,18 +553,65 @@ function MiniMonthView({ month, events, settings, onEventClick }) {
           const isCurrentMonth = isSameMonth(day, month);
           const isTodayDate = isToday(day);
 
-          return (
+          const tooltipContent = dayEvents.length > 0 ? (
+            <div className="text-center">
+              <div className="font-semibold mb-1">
+                {format(day, 'EEEE, MMMM d')}
+              </div>
+              <div className="text-xs text-gray-300 dark:text-gray-600 mb-2">
+                {dayEvents.length} event{dayEvents.length !== 1 ? 's' : ''}
+              </div>
+              {dayEvents.slice(0, 3).map(event => (
+                <div key={event.id} className="text-xs mb-1">
+                  <span 
+                    className="inline-block w-2 h-2 rounded-full mr-1"
+                    style={{ backgroundColor: event.color }}
+                  />
+                  {event.title}
+                </div>
+              ))}
+              {dayEvents.length > 3 && (
+                <div className="text-xs text-gray-400">
+                  +{dayEvents.length - 3} more
+                </div>
+              )}
+            </div>
+          ) : null;
+
+          const dayComponent = (
             <div
-              key={day.toISOString()}
               className={`
                 text-xs p-1 text-center relative cursor-pointer hover:bg-muted/50
                 ${!isCurrentMonth ? 'text-muted-foreground' : ''}
                 ${isTodayDate ? 'bg-blue-100 dark:bg-blue-950/30 rounded' : ''}
               `}
+              onClick={() => {
+                if (dayEvents.length > 0) {
+                  onEventPreviewOpen && onEventPreviewOpen(dayEvents[0]);
+                } else {
+                  onDateClick && onDateClick(day);
+                }
+              }}
             >
               {format(day, 'd')}
               {dayEvents.length > 0 && (
                 <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"></div>
+              )}
+            </div>
+          );
+
+          return (
+            <div key={day.toISOString()}>
+              {dayEvents.length > 0 && tooltipContent && settings.showEventTooltips ? (
+                <Tooltip content={tooltipContent} delay={settings.tooltipDelay}>
+                  {dayComponent}
+                </Tooltip>
+              ) : settings.showDateTooltips ? (
+                <DateTooltip date={day} onDateClick={onDateClick}>
+                  {dayComponent}
+                </DateTooltip>
+              ) : (
+                dayComponent
               )}
             </div>
           );
@@ -448,7 +631,6 @@ function EventChip({ event, onClick, compact = false }) {
       `}
       style={{ backgroundColor: event.color }}
       onClick={() => onClick && onClick()}
-      title={`${event.title}${event.description ? `: ${event.description}` : ''}`}
     >
       {event.title}
     </div>
@@ -456,14 +638,14 @@ function EventChip({ event, onClick, compact = false }) {
 }
 
 // Event Card Component for Day View
-function EventCard({ event, onClick }) {
+function EventCard({ event, onClick, onSecondaryClick }) {
   return (
-    <div
-      className="border border-border rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
-      onClick={() => onClick && onClick()}
-    >
+    <div className="border border-border rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between">
-        <div className="flex-1">
+        <div 
+          className="flex-1 cursor-pointer"
+          onClick={() => onClick && onClick()}
+        >
           <h3 className="font-semibold text-lg">{event.title}</h3>
           {event.description && (
             <p className="text-muted-foreground mt-1">{event.description}</p>
@@ -495,6 +677,22 @@ function EventCard({ event, onClick }) {
             </div>
           )}
         </div>
+        
+        {/* Action buttons */}
+        {onSecondaryClick && (
+          <div className="ml-4 flex flex-col gap-2">
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSecondaryClick();
+              }}
+            >
+              Select
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

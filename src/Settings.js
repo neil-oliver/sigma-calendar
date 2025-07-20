@@ -33,6 +33,10 @@ export const DEFAULT_SETTINGS = {
   customEventColors: {}, // Custom color mapping for categories
   showEventTooltips: true,
   enableEventClick: true,
+  eventInteractionMode: 'auto', // 'auto', 'tooltip', 'modal', 'both'
+  showDateTooltips: true,
+  tooltipDelay: 300,
+  showEventIds: false,
   headerToolbar: {
     left: 'prev,next today',
     center: 'title',
@@ -279,6 +283,75 @@ function Settings({
                 </Label>
               </div>
               <p className="text-sm text-muted-foreground">Enable clicking on events to trigger actions</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="eventInteractionMode">Event Interaction Mode</Label>
+              <Select
+                value={tempSettings.eventInteractionMode}
+                onValueChange={(value) => setTempSettings({ ...tempSettings, eventInteractionMode: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select interaction mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Auto (view-specific)</SelectItem>
+                  <SelectItem value="tooltip">Tooltips Only</SelectItem>
+                  <SelectItem value="modal">Modals Only</SelectItem>
+                  <SelectItem value="both">Both Tooltips & Modals</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">How event details are displayed when interacting</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="showDateTooltips">Date Tooltips</Label>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="showDateTooltips"
+                  checked={tempSettings.showDateTooltips}
+                  onCheckedChange={(checked) => setTempSettings({ ...tempSettings, showDateTooltips: checked })}
+                />
+                <Label htmlFor="showDateTooltips" className="text-sm font-normal">
+                  {tempSettings.showDateTooltips ? 'Enabled' : 'Disabled'}
+                </Label>
+              </div>
+              <p className="text-sm text-muted-foreground">Show tooltips when hovering over dates</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tooltipDelay">Tooltip Delay (ms)</Label>
+              <Select
+                value={tempSettings.tooltipDelay.toString()}
+                onValueChange={(value) => setTempSettings({ ...tempSettings, tooltipDelay: parseInt(value) })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select tooltip delay" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Instant</SelectItem>
+                  <SelectItem value="150">Fast (150ms)</SelectItem>
+                  <SelectItem value="300">Normal (300ms)</SelectItem>
+                  <SelectItem value="500">Slow (500ms)</SelectItem>
+                  <SelectItem value="750">Very Slow (750ms)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">Delay before showing tooltips</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="showEventIds">Show Event IDs</Label>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="showEventIds"
+                  checked={tempSettings.showEventIds}
+                  onCheckedChange={(checked) => setTempSettings({ ...tempSettings, showEventIds: checked })}
+                />
+                <Label htmlFor="showEventIds" className="text-sm font-normal">
+                  {tempSettings.showEventIds ? 'Enabled' : 'Disabled'}
+                </Label>
+              </div>
+              <p className="text-sm text-muted-foreground">Display event IDs in detailed views (for debugging)</p>
             </div>
           </div>
 
