@@ -4,7 +4,7 @@ import { Button } from './components/ui/button';
 import { Label } from './components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
 import { Switch } from './components/ui/switch';
-import { Input } from './components/ui/input';
+
 import { HelpCircle, Palette, RotateCcw } from 'lucide-react';
 import HelpModal from './HelpModal';
 
@@ -241,11 +241,12 @@ const hexToHsl = (hex) => {
   } else {
     s = l > 0.5 ? diff / (2 - sum) : diff / sum;
     
-    switch (max) {
-      case r: h = (g - b) / diff + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / diff + 2; break;
-      case b: h = (r - g) / diff + 4; break;
-    }
+         switch (max) {
+       case r: h = (g - b) / diff + (g < b ? 6 : 0); break;
+       case g: h = (b - r) / diff + 2; break;
+       case b: h = (r - g) / diff + 4; break;
+       default: h = 0; break;
+     }
     h /= 6;
   }
   
