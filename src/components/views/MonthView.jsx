@@ -11,7 +11,8 @@ function MonthView({
   onEventClick, 
   onEventModalOpen, 
   onEventPreviewOpen, 
-  onDateClick 
+  onDateClick,
+  mini = false
 }) {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -26,6 +27,73 @@ function MonthView({
     weekDays.push(weekDays.shift()); // Move Sunday to end
   }
 
+  // Mini view - compact like YearView but for current month only
+  if (mini) {
+    const miniWeekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    if (settings.weekStartsOn === 1) {
+      miniWeekDays.push(miniWeekDays.shift());
+    }
+
+    return (
+      <div className="border border-border rounded-lg p-4 max-w-xs mx-auto">
+        <h3 className="text-lg font-semibold mb-3 text-center">
+          {format(currentDate, 'MMMM yyyy')}
+        </h3>
+        
+        <div className="grid grid-cols-7 gap-1">
+          {/* Mini weekday headers */}
+          {miniWeekDays.map((day, index) => (
+            <div key={index} className="text-xs text-center text-muted-foreground p-1">
+              {day}
+            </div>
+          ))}
+          
+          {/* Mini calendar days */}
+          {days.map((day) => {
+            const dayEvents = getEventsForDate(events, day);
+            const isCurrentMonth = isSameMonth(day, currentDate);
+            const isTodayDate = isToday(day);
+
+            const dayComponent = (
+              <div
+                className={`
+                  text-xs p-1 text-center relative cursor-pointer hover:bg-muted/50 rounded
+                  ${!isCurrentMonth ? 'text-muted-foreground' : ''}
+                  ${isTodayDate ? 'bg-blue-100 dark:bg-blue-950/30' : ''}
+                `}
+                onClick={() => {
+                  if (dayEvents.length > 0) {
+                    onEventPreviewOpen && onEventPreviewOpen(dayEvents[0]);
+                  } else {
+                    onDateClick && onDateClick(day);
+                  }
+                }}
+              >
+                {format(day, 'd')}
+                {dayEvents.length > 0 && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"></div>
+                )}
+              </div>
+            );
+
+            return (
+              <div key={day.toISOString()}>
+                {settings.showDateTooltips ? (
+                  <DateTooltip date={day} onDateClick={onDateClick}>
+                    {dayComponent}
+                  </DateTooltip>
+                ) : (
+                  dayComponent
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Regular month view
   return (
     <div className="h-full flex flex-col">
       {/* Week day headers */}

@@ -11,12 +11,93 @@ function WeekView({
   onEventClick, 
   onEventModalOpen, 
   onEventPreviewOpen, 
-  onDateClick 
+  onDateClick,
+  mini = false
 }) {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: settings.weekStartsOn });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: settings.weekStartsOn });
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
+  // Mini view - more compact for mobile
+  if (mini) {
+    return (
+      <div className="h-full flex flex-col p-2">
+        {/* Compact week day headers */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {days.map((day) => {
+            const dayEvents = getEventsForDate(events, day);
+            const dayComponent = (
+              <div 
+                className={`
+                  text-center p-2 border border-border rounded cursor-pointer hover:bg-muted/50
+                  ${isToday(day) ? 'bg-blue-100 dark:bg-blue-950/30' : ''}
+                `}
+                onClick={() => onDateClick && onDateClick(day)}
+              >
+                <div className="text-xs font-medium text-muted-foreground">
+                  {format(day, 'EEE')}
+                </div>
+                <div className={`
+                  text-sm font-semibold
+                  ${isToday(day) ? 'text-blue-600 dark:text-blue-400' : ''}
+                `}>
+                  {format(day, 'd')}
+                </div>
+                {dayEvents.length > 0 && (
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mt-1"></div>
+                )}
+              </div>
+            );
+
+            return settings.showDateTooltips ? (
+              <DateTooltip key={day.toISOString()} date={day} onDateClick={onDateClick}>
+                {dayComponent}
+              </DateTooltip>
+            ) : (
+              <div key={day.toISOString()}>
+                {dayComponent}
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Compact event list */}
+        <div className="flex-1 overflow-auto">
+          {days.map((day) => {
+            const dayEvents = getEventsForDate(events, day);
+            if (dayEvents.length === 0) return null;
+            
+            return (
+              <div key={day.toISOString()} className="mb-3">
+                <h4 className="text-sm font-medium mb-1">
+                  {format(day, 'EEEE, MMM d')}
+                </h4>
+                <div className="space-y-1 pl-2">
+                  {dayEvents.slice(0, 3).map((event) => (
+                    <div 
+                      key={`${event.id}-${day.toISOString()}`}
+                      className="text-xs p-1 rounded cursor-pointer hover:opacity-80"
+                      style={{ backgroundColor: event.color, color: 'white' }}
+                      onClick={() => onEventClick && onEventClick(event.id, format(day, 'yyyy-MM-dd'))}
+                    >
+                      {event.title}
+                    </div>
+                  ))}
+                  {dayEvents.length > 3 && (
+                    <div className="text-xs text-muted-foreground pl-1">
+                      +{dayEvents.length - 3} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Regular week view
   return (
     <div className="h-full flex flex-col">
       {/* Week day headers */}

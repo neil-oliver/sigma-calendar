@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from './components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
 import EventDetailModal, { EventPreviewModal } from './components/EventDetailModal';
@@ -35,6 +35,23 @@ function CalendarView({ data, settings, onEventClick }) {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Responsive detection
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Check on mount
+    checkScreenSize();
+
+    // Add event listener
+    window.addEventListener('resize', checkScreenSize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   // Navigation functions
   const navigatePrevious = () => {
@@ -129,7 +146,8 @@ function CalendarView({ data, settings, onEventClick }) {
       onEventClick: handleEventAction,
       onEventModalOpen: handleEventModalOpen,
       onEventPreviewOpen: handleEventPreviewOpen,
-      onDateClick: handleDateClick
+      onDateClick: handleDateClick,
+      mini: isMobile
     };
 
     switch (currentView) {
@@ -160,49 +178,49 @@ function CalendarView({ data, settings, onEventClick }) {
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Header with navigation and view controls */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className={`flex items-center justify-between p-4 border-b border-border ${isMobile ? 'px-2' : ''}`}>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={navigatePrevious}>
+          <Button variant="outline" size={isMobile ? "sm" : "sm"} onClick={navigatePrevious}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={navigateNext}>
+          <Button variant="outline" size={isMobile ? "sm" : "sm"} onClick={navigateNext}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={navigateToday}>
-            Today
+          <Button variant="outline" size={isMobile ? "sm" : "sm"} onClick={navigateToday}>
+            {isMobile ? 'Today' : 'Today'}
           </Button>
         </div>
 
-        <h1 className="text-xl font-semibold">{getTitle()}</h1>
+        <h1 className={`font-semibold ${isMobile ? 'text-lg' : 'text-xl'}`}>{getTitle()}</h1>
 
         <div className="flex items-center gap-2">
           <Select value={currentView} onValueChange={setCurrentView}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className={isMobile ? "w-24" : "w-32"}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="month">
                 <div className="flex items-center gap-2">
                   <Grid3X3 className="h-4 w-4" />
-                  Month
+                  {isMobile ? 'Mo' : 'Month'}
                 </div>
               </SelectItem>
               <SelectItem value="week">
                 <div className="flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" />
-                  Week
+                  {isMobile ? 'Wk' : 'Week'}
                 </div>
               </SelectItem>
               <SelectItem value="day">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  Day
+                  {isMobile ? 'Day' : 'Day'}
                 </div>
               </SelectItem>
               <SelectItem value="year">
                 <div className="flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" />
-                  Year
+                  {isMobile ? 'Yr' : 'Year'}
                 </div>
               </SelectItem>
             </SelectContent>
