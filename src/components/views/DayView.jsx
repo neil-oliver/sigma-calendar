@@ -48,7 +48,7 @@ function DayView({
   if (mini) {
     return (
       <div className="h-full p-3 overflow-auto">
-        <div className="max-w-md mx-auto">
+        <div className="w-full">
           <div className="mb-3 text-center">
             <h3 className="text-lg font-semibold">
               {format(currentDate, 'EEEE, MMMM d')}

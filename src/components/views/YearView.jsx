@@ -20,12 +20,12 @@ function YearView({
   // Mini view - month-level aggregation
   if (mini) {
     return (
-      <div className="border border-border rounded-lg p-4 max-w-sm mx-auto">
+      <div className="h-full p-4">
         <h3 className="text-lg font-semibold mb-3 text-center">
           {format(currentDate, 'yyyy')}
         </h3>
         
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2 max-w-full">
           {months.map((month) => {
             // Get all events for this month
             const monthStart = startOfMonth(month);
@@ -38,7 +38,7 @@ function YearView({
             return (
               <div
                 key={month.toISOString()}
-                className="text-center p-2 border border-border rounded cursor-pointer hover:bg-muted/50 transition-colors"
+                className="text-center p-2 border border-border rounded cursor-pointer hover:bg-muted/50 transition-colors min-h-16"
                 onClick={() => onDateClick && onDateClick(month)}
               >
                 <div className="text-xs font-medium mb-1">

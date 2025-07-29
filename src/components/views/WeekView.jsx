@@ -29,7 +29,7 @@ function WeekView({
             const dayComponent = (
               <div 
                 className={`
-                  text-center p-2 border border-border rounded cursor-pointer hover:bg-muted/50
+                  text-center p-1 border border-border rounded cursor-pointer hover:bg-muted/50
                   ${isToday(day) ? 'bg-blue-100 dark:bg-blue-950/30' : ''}
                 `}
                 onClick={() => onDateClick && onDateClick(day)}

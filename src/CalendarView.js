@@ -36,11 +36,13 @@ function CalendarView({ data, settings, onEventClick }) {
   const [showEventModal, setShowEventModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isVerySmall, setIsVerySmall] = useState(false);
 
   // Responsive detection
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
+      setIsVerySmall(window.innerWidth < 480);
     };
 
     // Check on mount
@@ -186,12 +188,18 @@ function CalendarView({ data, settings, onEventClick }) {
           <Button variant="outline" size={isMobile ? "sm" : "sm"} onClick={navigateNext}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size={isMobile ? "sm" : "sm"} onClick={navigateToday}>
-            {isMobile ? 'Today' : 'Today'}
-          </Button>
+          {!isVerySmall && (
+            <Button variant="outline" size={isMobile ? "sm" : "sm"} onClick={navigateToday}>
+              Today
+            </Button>
+          )}
         </div>
 
-        <h1 className={`font-semibold ${isMobile ? 'text-lg' : 'text-xl'}`}>{getTitle()}</h1>
+        {!isVerySmall ? (
+          <h1 className={`font-semibold ${isMobile ? 'text-lg' : 'text-xl'}`}>{getTitle()}</h1>
+        ) : (
+          <div className="flex-1"></div>
+        )}
 
         <div className="flex items-center gap-2">
           <Select value={currentView} onValueChange={setCurrentView}>
@@ -214,7 +222,7 @@ function CalendarView({ data, settings, onEventClick }) {
               <SelectItem value="day">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  {isMobile ? 'Day' : 'Day'}
+                  Day
                 </div>
               </SelectItem>
               <SelectItem value="year">

@@ -35,12 +35,12 @@ function MonthView({
     }
 
     return (
-      <div className="border border-border rounded-lg p-4 max-w-xs mx-auto">
+      <div className="h-full p-4">
         <h3 className="text-lg font-semibold mb-3 text-center">
           {format(currentDate, 'MMMM yyyy')}
         </h3>
         
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-1 max-w-full">
           {/* Mini weekday headers */}
           {miniWeekDays.map((day, index) => (
             <div key={index} className="text-xs text-center text-muted-foreground p-1">
@@ -57,7 +57,7 @@ function MonthView({
             const dayComponent = (
               <div
                 className={`
-                  text-xs p-1 text-center relative cursor-pointer hover:bg-muted/50 rounded
+                  text-xs p-1 text-center relative cursor-pointer hover:bg-muted/50 rounded min-h-8
                   ${!isCurrentMonth ? 'text-muted-foreground' : ''}
                   ${isTodayDate ? 'bg-blue-100 dark:bg-blue-950/30' : ''}
                 `}
