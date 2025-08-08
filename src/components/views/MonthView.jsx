@@ -77,7 +77,7 @@ function MonthView({
             );
 
             return (
-              <div key={day.toISOString()}>
+              <div key={day.toISOString()} className="text-center">
                 {settings.showDateTooltips ? (
                   <DateTooltip date={day} onDateClick={onDateClick}>
                     {dayComponent}

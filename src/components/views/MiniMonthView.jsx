@@ -85,7 +85,7 @@ function MiniMonthView({
           );
 
           return (
-            <div key={day.toISOString()}>
+            <div key={day.toISOString()} className="text-center">
               {dayEvents.length > 0 && tooltipContent && settings.showEventTooltips ? (
                 <Tooltip content={tooltipContent} delay={settings.tooltipDelay}>
                   {dayComponent}
