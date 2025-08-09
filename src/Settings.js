@@ -7,6 +7,7 @@ import { Switch } from './components/ui/switch';
 
 import { HelpCircle, Palette, RotateCcw } from 'lucide-react';
 import HelpModal from './HelpModal';
+import { HslaColorPicker } from 'react-colorful';
 
 // Preset themes
 const PRESET_THEMES = {
@@ -199,59 +200,66 @@ const applyThemeColors = (theme, customColors = null) => {
   });
 };
 
-// Function to convert HSL to hex for color inputs
-const hslToHex = (hslString) => {
-  const [h, s, l] = hslString.split(' ').map(v => parseFloat(v.replace('%', '')));
-  const hue = h / 360;
-  const saturation = s / 100;
-  const lightness = l / 100;
-  
-  const c = (1 - Math.abs(2 * lightness - 1)) * saturation;
-  const x = c * (1 - Math.abs((hue * 6) % 2 - 1));
-  const m = lightness - c / 2;
-  
-  let r, g, b;
-  if (hue < 1/6) [r, g, b] = [c, x, 0];
-  else if (hue < 2/6) [r, g, b] = [x, c, 0];
-  else if (hue < 3/6) [r, g, b] = [0, c, x];
-  else if (hue < 4/6) [r, g, b] = [0, x, c];
-  else if (hue < 5/6) [r, g, b] = [x, 0, c];
-  else [r, g, b] = [c, 0, x];
-  
-  const toHex = (n) => Math.round((n + m) * 255).toString(16).padStart(2, '0');
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+// HSLA helpers for storage as CSS var-friendly strings: "h s% l% / a"
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+const parseHslaString = (value) => {
+  if (!value) return { h: 0, s: 0, l: 50, a: 1 };
+  // Expected forms: "h s% l%" or "h s% l% / a"
+  const [hslPart, alphaPart] = value.split('/').map((v) => v.trim());
+  const [hStr, sStr, lStr] = hslPart.split(' ').map((v) => v.trim());
+  const h = Number.parseFloat(hStr || '0');
+  const s = Number.parseFloat((sStr || '0').replace('%', ''));
+  const l = Number.parseFloat((lStr || '50').replace('%', ''));
+  const a = alphaPart !== undefined ? Number.parseFloat(alphaPart) : 1;
+  return {
+    h: clamp(Number.isFinite(h) ? h : 0, 0, 360),
+    s: clamp(Number.isFinite(s) ? s : 0, 0, 100),
+    l: clamp(Number.isFinite(l) ? l : 50, 0, 100),
+    a: clamp(Number.isFinite(a) ? a : 1, 0, 1),
+  };
 };
+const formatHslaString = ({ h, s, l, a }) => `${Math.round(clamp(h ?? 0, 0, 360))} ${Math.round(clamp(s ?? 0, 0, 100))}% ${Math.round(clamp(l ?? 50, 0, 100))}% / ${clamp(a ?? 1, 0, 1)}`;
 
-// Function to convert hex to HSL for storage
-const hexToHsl = (hex) => {
-  const r = parseInt(hex.slice(1, 3), 16) / 255;
-  const g = parseInt(hex.slice(3, 5), 16) / 255;
-  const b = parseInt(hex.slice(5, 7), 16) / 255;
-  
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const diff = max - min;
-  const sum = max + min;
-  
-  const l = sum / 2;
-  let h, s;
-  
-  if (diff === 0) {
-    h = s = 0;
-  } else {
-    s = l > 0.5 ? diff / (2 - sum) : diff / sum;
-    
-         switch (max) {
-       case r: h = (g - b) / diff + (g < b ? 6 : 0); break;
-       case g: h = (b - r) / diff + 2; break;
-       case b: h = (r - g) / diff + 4; break;
-       default: h = 0; break;
-     }
-    h /= 6;
-  }
-  
-  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-};
+function ColorPickerField({ label, colorKey, value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const hsla = parseHslaString(value);
+  const swatchStyle = {
+    backgroundColor: `hsl(${formatHslaString(hsla)})`,
+  };
+  const checkerBg = {
+    backgroundImage:
+      'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)',
+    backgroundSize: '8px 8px',
+    backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
+  };
+  return (
+    <div className="flex items-center gap-2 relative">
+      <label className="text-xs font-normal min-w-0 flex-1">{label}</label>
+      <button
+        type="button"
+        className="w-8 h-8 rounded border border-border overflow-hidden"
+        style={checkerBg}
+        aria-label={`Pick ${label}`}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <div className="w-full h-full" style={swatchStyle} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-10 z-50 bg-popover text-popover-foreground border border-border rounded-md p-2 shadow-md">
+          <div className="space-y-2">
+            <HslaColorPicker
+              color={hsla}
+              onChange={(c) => onChange(colorKey, formatHslaString(c))}
+            />
+            <div className="text-xs text-muted-foreground">
+              {formatHslaString(hsla)}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function Settings({ 
   isOpen, 
@@ -322,9 +330,8 @@ function Settings({
     setTempSettings({ ...tempSettings, styling: newStyling });
   };
 
-  const handleCustomColorChange = (colorKey, hexValue) => {
-    const hslValue = hexToHsl(hexValue);
-    const newCustomColors = { ...tempSettings.styling.customColors, [colorKey]: hslValue };
+  const handleCustomColorChange = (colorKey, hslaString) => {
+    const newCustomColors = { ...tempSettings.styling.customColors, [colorKey]: hslaString };
     
     setTempSettings({
       ...tempSettings,
@@ -687,17 +694,13 @@ function Settings({
                       <h4 className="text-sm font-medium">Primary Colors</h4>
                       <div className="grid grid-cols-2 gap-3">
                         {['--primary', '--primary-foreground', '--secondary', '--secondary-foreground'].map((key) => (
-                          <div key={key} className="flex items-center gap-2">
-                            <label className="text-xs font-normal min-w-0 flex-1">
-                              {key.replace('--', '').replace('-', ' ')}:
-                            </label>
-                            <input
-                              type="color"
-                              value={hslToHex(tempSettings.styling.customColors[key] || '0 0% 50%')}
-                              onChange={(e) => handleCustomColorChange(key, e.target.value)}
-                              className="w-8 h-8 rounded border border-border cursor-pointer"
-                            />
-                          </div>
+                          <ColorPickerField
+                            key={key}
+                            label={`${key.replace('--', '').replace('-', ' ')}:`}
+                            colorKey={key}
+                            value={tempSettings.styling.customColors[key] || '0 0% 50% / 1'}
+                            onChange={handleCustomColorChange}
+                          />
                         ))}
                       </div>
                     </div>
@@ -707,17 +710,13 @@ function Settings({
                       <h4 className="text-sm font-medium">Background Colors</h4>
                       <div className="grid grid-cols-2 gap-3">
                         {['--background', '--foreground', '--card', '--card-foreground'].map((key) => (
-                          <div key={key} className="flex items-center gap-2">
-                            <label className="text-xs font-normal min-w-0 flex-1">
-                              {key.replace('--', '').replace('-', ' ')}:
-                            </label>
-                            <input
-                              type="color"
-                              value={hslToHex(tempSettings.styling.customColors[key] || '0 0% 50%')}
-                              onChange={(e) => handleCustomColorChange(key, e.target.value)}
-                              className="w-8 h-8 rounded border border-border cursor-pointer"
-                            />
-                          </div>
+                          <ColorPickerField
+                            key={key}
+                            label={`${key.replace('--', '').replace('-', ' ')}:`}
+                            colorKey={key}
+                            value={tempSettings.styling.customColors[key] || '0 0% 50% / 1'}
+                            onChange={handleCustomColorChange}
+                          />
                         ))}
                       </div>
                     </div>
@@ -727,17 +726,13 @@ function Settings({
                       <h4 className="text-sm font-medium">Accent Colors</h4>
                       <div className="grid grid-cols-2 gap-3">
                         {['--accent', '--accent-foreground', '--muted', '--muted-foreground'].map((key) => (
-                          <div key={key} className="flex items-center gap-2">
-                            <label className="text-xs font-normal min-w-0 flex-1">
-                              {key.replace('--', '').replace('-', ' ')}:
-                            </label>
-                            <input
-                              type="color"
-                              value={hslToHex(tempSettings.styling.customColors[key] || '0 0% 50%')}
-                              onChange={(e) => handleCustomColorChange(key, e.target.value)}
-                              className="w-8 h-8 rounded border border-border cursor-pointer"
-                            />
-                          </div>
+                          <ColorPickerField
+                            key={key}
+                            label={`${key.replace('--', '').replace('-', ' ')}:`}
+                            colorKey={key}
+                            value={tempSettings.styling.customColors[key] || '0 0% 50% / 1'}
+                            onChange={handleCustomColorChange}
+                          />
                         ))}
                       </div>
                     </div>
@@ -747,17 +742,13 @@ function Settings({
                       <h4 className="text-sm font-medium">Border & Input Colors</h4>
                       <div className="grid grid-cols-2 gap-3">
                         {['--border', '--input', '--ring', '--destructive'].map((key) => (
-                          <div key={key} className="flex items-center gap-2">
-                            <label className="text-xs font-normal min-w-0 flex-1">
-                              {key.replace('--', '').replace('-', ' ')}:
-                            </label>
-                            <input
-                              type="color"
-                              value={hslToHex(tempSettings.styling.customColors[key] || '0 0% 50%')}
-                              onChange={(e) => handleCustomColorChange(key, e.target.value)}
-                              className="w-8 h-8 rounded border border-border cursor-pointer"
-                            />
-                          </div>
+                          <ColorPickerField
+                            key={key}
+                            label={`${key.replace('--', '').replace('-', ' ') }:`}
+                            colorKey={key}
+                            value={tempSettings.styling.customColors[key] || '0 0% 50% / 1'}
+                            onChange={handleCustomColorChange}
+                          />
                         ))}
                       </div>
                     </div>
