@@ -117,7 +117,8 @@ function CalendarView({ data, settings, onEventClick }) {
 
   const handleDateClick = (date) => {
     if (onEventClick) {
-      onEventClick(null, format(date, 'yyyy-MM-dd'));
+      // Use empty string for no event to align with Sigma text variable expectations
+      onEventClick('', format(date, 'yyyy-MM-dd'));
     }
   };
 
