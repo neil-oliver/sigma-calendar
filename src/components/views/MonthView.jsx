@@ -57,7 +57,7 @@ function MonthView({
             const dayComponent = (
               <div
                 className={`
-                  text-xs p-1 text-center relative cursor-pointer hover:bg-muted/50 rounded min-h-8
+                  text-xs p-1 text-center relative cursor-pointer hover:bg-muted/50 rounded min-h-5
                   ${!isCurrentMonth ? 'text-muted-foreground' : ''}
                   ${isTodayDate ? 'bg-blue-100 dark:bg-blue-950/30' : ''}
                 `}
