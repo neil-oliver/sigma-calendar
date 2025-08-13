@@ -223,8 +223,8 @@ function App() {
       setEventIdVariable(hasEvent ? String(eventId) : '');
       setDateVariable(date);
 
-      // Trigger the action only when an event was clicked
-      if (triggerEventClick && hasEvent) {
+      // Trigger the action for both event clicks and date-only clicks
+      if (triggerEventClick) {
         triggerEventClick();
       }
       
