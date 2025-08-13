@@ -36,6 +36,8 @@ function MiniMonthView({
           const dayEvents = getEventsForDate(events, day);
           const isCurrentMonth = isSameMonth(day, month);
           const isTodayDate = isToday(day);
+          const interactionMode = settings.eventInteractionMode || 'auto';
+          const allowPreviewModal = interactionMode !== 'tooltip';
 
           const tooltipContent = dayEvents.length > 0 ? (
             <div className="text-center">
@@ -71,7 +73,11 @@ function MiniMonthView({
               `}
               onClick={() => {
                 if (dayEvents.length > 0) {
-                  onEventPreviewOpen && onEventPreviewOpen(dayEvents[0]);
+                  if (allowPreviewModal) {
+                    onEventPreviewOpen && onEventPreviewOpen(dayEvents[0]);
+                  } else {
+                    onDateClick && onDateClick(day);
+                  }
                 } else {
                   onDateClick && onDateClick(day);
                 }

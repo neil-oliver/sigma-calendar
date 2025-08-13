@@ -54,6 +54,9 @@ function MonthView({
             const isCurrentMonth = isSameMonth(day, currentDate);
             const isTodayDate = isToday(day);
 
+            const interactionMode = settings.eventInteractionMode || 'auto';
+            const allowPreviewModal = interactionMode !== 'tooltip';
+
             const dayComponent = (
               <div
                 className={`
@@ -63,7 +66,11 @@ function MonthView({
                 `}
                 onClick={() => {
                   if (dayEvents.length > 0) {
-                    onEventPreviewOpen && onEventPreviewOpen(dayEvents[0]);
+                    if (allowPreviewModal) {
+                      onEventPreviewOpen && onEventPreviewOpen(dayEvents[0]);
+                    } else {
+                      onDateClick && onDateClick(day);
+                    }
                   } else {
                     onDateClick && onDateClick(day);
                   }
