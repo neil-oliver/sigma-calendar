@@ -2,7 +2,7 @@ import React from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isToday } from 'date-fns';
 import { getEventsForDate } from '../../utils/dataProcessor';
 import EventChip from './EventChip';
-import { DateTooltip, EventTooltip } from '../ui/tooltip';
+import Tooltip, { DateTooltip, EventTooltip } from '../ui/tooltip';
 
 function MonthView({ 
   currentDate, 
@@ -48,11 +48,35 @@ function MonthView({
             </div>
           ))}
           
-          {/* Mini calendar days */}
-          {days.map((day) => {
-            const dayEvents = getEventsForDate(events, day);
-            const isCurrentMonth = isSameMonth(day, currentDate);
-            const isTodayDate = isToday(day);
+        {/* Mini calendar days */}
+        {days.map((day) => {
+          const dayEvents = getEventsForDate(events, day);
+          const isCurrentMonth = isSameMonth(day, currentDate);
+          const isTodayDate = isToday(day);
+          const tooltipContent = dayEvents.length > 0 ? (
+            <div className="text-center">
+              <div className="font-semibold mb-1">
+                {format(day, 'EEEE, MMMM d')}
+              </div>
+              <div className="text-xs text-gray-300 dark:text-gray-600 mb-2">
+                {dayEvents.length} event{dayEvents.length !== 1 ? 's' : ''}
+              </div>
+              {dayEvents.slice(0, 3).map(event => (
+                <div key={event.id} className="text-xs mb-1">
+                  <span 
+                    className="inline-block w-2 h-2 rounded-full mr-1"
+                    style={{ backgroundColor: event.color }}
+                  />
+                  {event.title}
+                </div>
+              ))}
+              {dayEvents.length > 3 && (
+                <div className="text-xs text-gray-400">
+                  +{dayEvents.length - 3} more
+                </div>
+              )}
+            </div>
+          ) : null;
 
             const interactionMode = settings.eventInteractionMode || 'auto';
             const allowPreviewModal = interactionMode !== 'tooltip';
@@ -69,7 +93,7 @@ function MonthView({
                     if (allowPreviewModal) {
                       onEventPreviewOpen && onEventPreviewOpen(dayEvents[0]);
                     } else {
-                      onDateClick && onDateClick(day);
+                      onEventClick && onEventClick(dayEvents[0].id, format(day, 'yyyy-MM-dd'));
                     }
                   } else {
                     onDateClick && onDateClick(day);
@@ -85,7 +109,11 @@ function MonthView({
 
             return (
               <div key={day.toISOString()} className="text-center">
-                {settings.showDateTooltips ? (
+                {dayEvents.length > 0 && tooltipContent && settings.showEventTooltips ? (
+                  <Tooltip content={tooltipContent} delay={settings.tooltipDelay}>
+                    {dayComponent}
+                  </Tooltip>
+                ) : settings.showDateTooltips ? (
                   <DateTooltip date={day} onDateClick={onDateClick}>
                     {dayComponent}
                   </DateTooltip>
