@@ -144,7 +144,7 @@ function MonthView({
               )}
 
               {/* Events */}
-              <div className="flex-1 space-y-1">
+              <div className="flex-1 space-y-1 min-w-0">
                 {dayEvents.slice(0, settings.dayMaxEvents || 3).map((event) => {
                   const eventChip = (
                     <EventChip
@@ -156,7 +156,7 @@ function MonthView({
 
                   // Respect interaction mode settings
                   if (!settings.showEventTooltips || settings.eventInteractionMode === 'modal') {
-                    return <div key={`${event.id}-${day.toISOString()}`}>{eventChip}</div>;
+                    return <div key={`${event.id}-${day.toISOString()}`} className="min-w-0 w-full">{eventChip}</div>;
                   }
 
                   return (
@@ -164,6 +164,7 @@ function MonthView({
                       key={`${event.id}-${day.toISOString()}`} 
                       event={event}
                       delay={settings.tooltipDelay}
+                      triggerClassName="block w-full min-w-0"
                     >
                       {eventChip}
                     </EventTooltip>

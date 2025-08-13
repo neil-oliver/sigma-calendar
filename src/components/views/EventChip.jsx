@@ -4,7 +4,7 @@ function EventChip({ event, onClick, compact = false }) {
   return (
     <div
       className={`
-        rounded px-2 py-1 text-xs cursor-pointer hover:opacity-80 truncate
+        rounded px-2 py-1 text-xs cursor-pointer hover:opacity-80 truncate w-full
         ${compact ? 'text-white' : 'text-white'}
       `}
       style={{ backgroundColor: event.color }}

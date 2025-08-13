@@ -7,7 +7,8 @@ const Tooltip = ({
   placement = 'top',
   delay = 300,
   className = '',
-  disabled = false 
+  disabled = false,
+  triggerClassName = ''
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
@@ -96,7 +97,7 @@ const Tooltip = ({
         ref={triggerRef}
         onMouseEnter={showTooltip}
         onMouseLeave={hideTooltip}
-        className="inline-block"
+        className={triggerClassName || 'inline-block'}
       >
         {children}
       </div>
@@ -133,7 +134,7 @@ const Tooltip = ({
 };
 
 // Specialized Event Tooltip Component
-const EventTooltip = ({ event, children, placement = 'top', delay = 300 }) => {
+const EventTooltip = ({ event, children, placement = 'top', delay = 300, triggerClassName = '' }) => {
   if (!event) return children;
 
   const formatEventTime = (event) => {
@@ -201,7 +202,7 @@ const EventTooltip = ({ event, children, placement = 'top', delay = 300 }) => {
   );
 
   return (
-    <Tooltip content={tooltipContent} placement={placement} delay={delay}>
+    <Tooltip content={tooltipContent} placement={placement} delay={delay} triggerClassName={triggerClassName}>
       {children}
     </Tooltip>
   );
