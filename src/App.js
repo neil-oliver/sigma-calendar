@@ -215,13 +215,16 @@ function App() {
     try {
       console.log('Event click triggered:', { eventId, date });
       
+      // Determine if an actual event was clicked
+      const hasEvent = eventId != null && eventId !== '';
+
       // Set the variables
       // Coerce to string for Sigma text variables; use empty string when no event is selected
-      setEventIdVariable(eventId == null ? '' : String(eventId));
+      setEventIdVariable(hasEvent ? String(eventId) : '');
       setDateVariable(date);
-      
-      // Trigger the action
-      if (triggerEventClick) {
+
+      // Trigger the action only when an event was clicked
+      if (triggerEventClick && hasEvent) {
         triggerEventClick();
       }
       
