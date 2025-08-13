@@ -142,7 +142,7 @@ function WeekView({
                 ${isToday(day) ? 'bg-blue-50 dark:bg-blue-950/20' : ''}
               `}
             >
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 {dayEvents.map((event) => {
                   const eventChip = (
                     <EventChip
@@ -154,7 +154,7 @@ function WeekView({
 
                   // Respect interaction mode settings
                   if (!settings.showEventTooltips || settings.eventInteractionMode === 'modal') {
-                    return <div key={`${event.id}-${day.toISOString()}`}>{eventChip}</div>;
+                    return <div key={`${event.id}-${day.toISOString()}`} className="min-w-0 w-full">{eventChip}</div>;
                   }
 
                   return (
@@ -162,6 +162,7 @@ function WeekView({
                       key={`${event.id}-${day.toISOString()}`} 
                       event={event}
                       delay={settings.tooltipDelay}
+                      triggerClassName="block w-full min-w-0"
                     >
                       {eventChip}
                     </EventTooltip>
