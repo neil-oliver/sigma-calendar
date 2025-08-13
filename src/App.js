@@ -216,7 +216,8 @@ function App() {
       console.log('Event click triggered:', { eventId, date });
       
       // Set the variables
-      setEventIdVariable(eventId);
+      // Coerce to string for Sigma text variables; use empty string when no event is selected
+      setEventIdVariable(eventId == null ? '' : String(eventId));
       setDateVariable(date);
       
       // Trigger the action
