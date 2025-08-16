@@ -4,6 +4,8 @@ import { client, useConfig, useElementData, useElementColumns, useVariable, useA
 import { Button } from './components/ui/button';
 import { Settings as SettingsIcon } from 'lucide-react';
 import Settings, { DEFAULT_SETTINGS } from './Settings';
+import HelpModal from './HelpModal';
+import Onboarding from './components/Onboarding';
 import { processCalendarData } from './utils/dataProcessor';
 import CalendarView from './CalendarView';
 import './App.css';
@@ -31,6 +33,7 @@ function App() {
   const elementColumns = useElementColumns(config.source);
   const [error, setError] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
 
   // Get variables and action trigger
@@ -251,20 +254,39 @@ function App() {
 
   if (!config.source || !config.title || !config.startDate) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-10">
-        <div className="text-center max-w-xl">
-          <h3 className="text-lg font-semibold mb-2">Calendar Plugin</h3>
-          <p className="text-muted-foreground">Please configure the data source, event title, and start date columns.</p>
-        </div>
-      </div>
+      <>
+        <Onboarding
+          hasSource={!!config.source}
+          hasRequiredColumns={!!config.title && !!config.startDate}
+          editMode={!!config.editMode}
+          onOpenSettings={() => setShowSettings(true)}
+          onOpenHelp={() => setShowHelp(true)}
+        />
+        <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
+        <Settings
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+          currentSettings={settings}
+          onSave={handleSettingsSave}
+          client={client}
+          elementColumns={elementColumns}
+          config={config}
+        />
+      </>
     );
   }
 
-  if (!sigmaData || !calendarData) {
+  // If config exists but data is still loading, render nothing per requirements
+  if (sigmaData == null) {
+    return null;
+  }
+  // If data loaded but couldn't be processed, show a gentle configuration hint
+  if (!calendarData) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-10">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold text-muted-foreground">Loading calendar data...</h3>
+        <div className="text-center max-w-xl">
+          <h3 className="text-lg font-semibold mb-2">Calendar Configuration</h3>
+          <p className="text-muted-foreground">We couldn't build events from the current configuration. Please verify your selected columns match the source data.</p>
         </div>
       </div>
     );
