@@ -182,10 +182,22 @@ function MonthView({
               {/* Events */}
               <div className="flex-1 space-y-1 min-w-0">
                 {dayEvents.slice(0, settings.dayMaxEvents || 3).map((event) => {
+                  // Determine the appropriate click handler based on interaction mode
+                  const getEventClickHandler = () => {
+                    const mode = settings.eventInteractionMode || 'auto';
+                    if (mode === 'tooltip') {
+                      // Tooltip mode: only trigger Sigma actions, no modal
+                      return () => onEventClick && onEventClick(event.id, format(day, 'yyyy-MM-dd'));
+                    } else {
+                      // Modal, both, or auto modes: open modal
+                      return () => onEventModalOpen && onEventModalOpen(event);
+                    }
+                  };
+
                   const eventChip = (
                     <EventChip
                       event={event}
-                      onClick={() => onEventClick && onEventClick(event.id, format(day, 'yyyy-MM-dd'))}
+                      onClick={getEventClickHandler()}
                       compact={true}
                     />
                   );

@@ -73,16 +73,29 @@ function WeekView({
                   {format(day, 'EEEE, MMM d')}
                 </h4>
                 <div className="space-y-1 pl-2">
-                  {dayEvents.slice(0, 3).map((event) => (
-                    <div 
-                      key={`${event.id}-${day.toISOString()}`}
-                      className="text-xs p-1 rounded cursor-pointer hover:opacity-80"
-                      style={{ backgroundColor: event.color, color: 'white' }}
-                      onClick={() => onEventClick && onEventClick(event.id, format(day, 'yyyy-MM-dd'))}
-                    >
-                      {event.title}
-                    </div>
-                  ))}
+                  {dayEvents.slice(0, 3).map((event) => {
+                    const mode = settings.eventInteractionMode || 'auto';
+                    const handleClick = () => {
+                      if (mode === 'tooltip') {
+                        // Tooltip mode: only trigger Sigma actions, no modal
+                        onEventClick && onEventClick(event.id, format(day, 'yyyy-MM-dd'));
+                      } else {
+                        // Modal, both, or auto modes: open modal
+                        onEventModalOpen && onEventModalOpen(event);
+                      }
+                    };
+
+                    return (
+                      <div 
+                        key={`${event.id}-${day.toISOString()}`}
+                        className="text-xs p-1 rounded cursor-pointer hover:opacity-80"
+                        style={{ backgroundColor: event.color, color: 'white' }}
+                        onClick={handleClick}
+                      >
+                        {event.title}
+                      </div>
+                    );
+                  })}
                   {dayEvents.length > 3 && (
                     <div className="text-xs text-muted-foreground pl-1">
                       +{dayEvents.length - 3} more
@@ -144,10 +157,22 @@ function WeekView({
             >
               <div className="space-y-1 min-w-0">
                 {dayEvents.map((event) => {
+                  // Determine the appropriate click handler based on interaction mode
+                  const getEventClickHandler = () => {
+                    const mode = settings.eventInteractionMode || 'auto';
+                    if (mode === 'tooltip') {
+                      // Tooltip mode: only trigger Sigma actions, no modal
+                      return () => onEventClick && onEventClick(event.id, format(day, 'yyyy-MM-dd'));
+                    } else {
+                      // Modal, both, or auto modes: open modal
+                      return () => onEventModalOpen && onEventModalOpen(event);
+                    }
+                  };
+
                   const eventChip = (
                     <EventChip
                       event={event}
-                      onClick={() => onEventClick && onEventClick(event.id, format(day, 'yyyy-MM-dd'))}
+                      onClick={getEventClickHandler()}
                       compact={false}
                     />
                   );
