@@ -12,6 +12,7 @@ const Tooltip = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [actualPlacement, setActualPlacement] = useState(placement);
   const tooltipRef = useRef(null);
   const triggerRef = useRef(null);
   const timeoutRef = useRef(null);
@@ -41,6 +42,7 @@ const Tooltip = ({
     const viewportHeight = window.innerHeight;
 
     let top, left;
+    let finalPlacement = placement;
 
     switch (placement) {
       case 'top':
@@ -62,19 +64,27 @@ const Tooltip = ({
       default:
         top = triggerRect.top - tooltipRect.height - 8;
         left = triggerRect.left + (triggerRect.width - tooltipRect.width) / 2;
+        finalPlacement = 'top';
     }
 
-    // Adjust for viewport boundaries
+    // Adjust for viewport boundaries and track actual final placement
     if (left < 8) left = 8;
     if (left + tooltipRect.width > viewportWidth - 8) {
       left = viewportWidth - tooltipRect.width - 8;
     }
-    if (top < 8) top = triggerRect.bottom + 8;
+    
+    // Vertical adjustments - these change the actual placement
+    if (top < 8) {
+      top = triggerRect.bottom + 8;
+      finalPlacement = 'bottom'; // Tooltip moved below trigger
+    }
     if (top + tooltipRect.height > viewportHeight - 8) {
       top = triggerRect.top - tooltipRect.height - 8;
+      finalPlacement = 'top'; // Tooltip moved above trigger
     }
 
     setPosition({ top, left });
+    setActualPlacement(finalPlacement);
   }, [placement]);
 
   useEffect(() => {
@@ -82,6 +92,10 @@ const Tooltip = ({
       calculatePosition();
     }
   }, [isVisible, calculatePosition]);
+
+  useEffect(() => {
+    setActualPlacement(placement);
+  }, [placement]);
 
   useEffect(() => {
     return () => {
@@ -121,10 +135,10 @@ const Tooltip = ({
             className={`
               absolute w-2 h-2 transform rotate-45
               bg-gray-900 dark:bg-gray-100
-              ${placement === 'top' ? 'bottom-[-4px] left-1/2 -translate-x-1/2' : ''}
-              ${placement === 'bottom' ? 'top-[-4px] left-1/2 -translate-x-1/2' : ''}
-              ${placement === 'left' ? 'right-[-4px] top-1/2 -translate-y-1/2' : ''}
-              ${placement === 'right' ? 'left-[-4px] top-1/2 -translate-y-1/2' : ''}
+              ${actualPlacement === 'top' ? 'bottom-[-4px] left-1/2 -translate-x-1/2' : ''}
+              ${actualPlacement === 'bottom' ? 'top-[-4px] left-1/2 -translate-x-1/2' : ''}
+              ${actualPlacement === 'left' ? 'right-[-4px] top-1/2 -translate-y-1/2' : ''}
+              ${actualPlacement === 'right' ? 'left-[-4px] top-1/2 -translate-y-1/2' : ''}
             `}
           />
         </div>
