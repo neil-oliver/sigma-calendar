@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
 import EventDetailModal, { EventPreviewModal } from './components/EventDetailModal';
+import DayEventsModal from './components/DayEventsModal';
 import { 
   MonthView, 
   WeekView, 
@@ -35,6 +36,9 @@ function CalendarView({ data, settings, onEventClick }) {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showDayEventsModal, setShowDayEventsModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDateEvents, setSelectedDateEvents] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
   const [isVerySmall, setIsVerySmall] = useState(false);
 
@@ -109,6 +113,12 @@ function CalendarView({ data, settings, onEventClick }) {
     setShowPreviewModal(true);
   };
 
+  const handleDayEventsOpen = (date, events) => {
+    setSelectedDate(date);
+    setSelectedDateEvents(events);
+    setShowDayEventsModal(true);
+  };
+
   const handleEventAction = (eventId, date) => {
     if (onEventClick) {
       onEventClick(eventId, date);
@@ -149,6 +159,7 @@ function CalendarView({ data, settings, onEventClick }) {
       onEventClick: handleEventAction,
       onEventModalOpen: handleEventModalOpen,
       onEventPreviewOpen: handleEventPreviewOpen,
+      onDayEventsOpen: handleDayEventsOpen,
       onDateClick: handleDateClick,
       mini: isMobile
     };
@@ -260,6 +271,15 @@ function CalendarView({ data, settings, onEventClick }) {
           setShowEventModal(true);
         }}
         onEventAction={handleEventAction}
+      />
+      
+      <DayEventsModal
+        date={selectedDate}
+        events={selectedDateEvents}
+        isOpen={showDayEventsModal}
+        onClose={() => setShowDayEventsModal(false)}
+        onEventClick={handleEventAction}
+        settings={settings}
       />
     </div>
   );
