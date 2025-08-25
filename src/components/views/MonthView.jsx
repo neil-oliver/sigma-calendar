@@ -11,6 +11,7 @@ function MonthView({
   onEventClick, 
   onEventModalOpen, 
   onEventPreviewOpen, 
+  onDayEventsOpen,
   onDateClick,
   mini = false
 }) {
@@ -208,7 +209,7 @@ function MonthView({
                 {dayEvents.length > (settings.dayMaxEvents || 3) && (
                   <div 
                     className="text-xs text-muted-foreground cursor-pointer hover:text-foreground"
-                    onClick={() => onEventPreviewOpen && onEventPreviewOpen(dayEvents[settings.dayMaxEvents || 3])}
+                    onClick={() => onDayEventsOpen && onDayEventsOpen(day, dayEvents)}
                   >
                     +{dayEvents.length - (settings.dayMaxEvents || 3)} more
                   </div>
