@@ -2,6 +2,10 @@
 
 A flexible and powerful calendar component for Sigma Computing that displays your data as events across multiple calendar views. Features include month, week, day, and year views with support for both single-day and multi-day events.
 
+## Screenshot
+
+![Sigma Calendar Plugin](public/images/sigma-calendar.png)
+
 ## Features
 
 - **Multiple Calendar Views**: Month, week, day, and year views for different perspectives
