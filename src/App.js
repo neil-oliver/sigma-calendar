@@ -1,8 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { client, useConfig, useElementData, useElementColumns, useVariable, useActionTrigger } from '@sigmacomputing/plugin';
-import { Button } from './components/ui/button';
-import { Settings as SettingsIcon } from 'lucide-react';
 import Settings, { DEFAULT_SETTINGS } from './Settings';
 import HelpModal from './HelpModal';
 import Onboarding from './components/Onboarding';
@@ -40,6 +38,10 @@ function App() {
   const [eventIdVariable, setEventIdVariable] = useVariable(config.selectedEventID);
   const [dateVariable, setDateVariable] = useVariable(config.selectedDate);
   const triggerEventClick = useActionTrigger(config.onEventClick);
+  
+  // Track when settings were saved locally to avoid race condition with stale config.config updates
+  // Using timestamp instead of boolean to handle multiple rapid config updates from Sigma
+  const lastSettingsSaveTime = useRef(0);
 
   // Debug: Log element columns structure
   console.log('Element Columns:', elementColumns);
@@ -181,6 +183,13 @@ function App() {
 
   // Parse config JSON and load settings
   useEffect(() => {
+    // Skip config.config updates for 1 second after a local save
+    // This handles multiple rapid updates from Sigma that might contain stale data
+    const timeSinceLastSave = Date.now() - lastSettingsSaveTime.current;
+    if (timeSinceLastSave < 1000) {
+      return;
+    }
+    
     if (config.config && config.config.trim()) {
       try {
         const parsedConfig = JSON.parse(config.config);
@@ -210,6 +219,8 @@ function App() {
   const calendarData = processCalendarData(sigmaData, config, settings, elementColumns);
 
   const handleSettingsSave = (newSettings) => {
+    // Record save time to prevent config.config useEffect from overwriting with stale data
+    lastSettingsSaveTime.current = Date.now();
     setSettings(newSettings);
     setShowSettings(false);
   };
@@ -293,22 +304,13 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative">
-      {config.editMode && (
-        <Button 
-          className="absolute top-5 right-5 z-10 gap-2"
-          onClick={() => setShowSettings(true)}
-          size="sm"
-        >
-          <SettingsIcon className="h-4 w-4" />
-          Settings
-        </Button>
-      )}
-      
+    <div className="min-h-screen bg-background text-foreground">
       <CalendarView 
         data={calendarData}
         settings={settings}
         onEventClick={handleEventClick}
+        editMode={config.editMode}
+        onOpenSettings={() => setShowSettings(true)}
       />
       
       <Settings

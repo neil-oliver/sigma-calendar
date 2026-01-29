@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
 import EventDetailModal, { EventPreviewModal } from './components/EventDetailModal';
@@ -14,7 +14,8 @@ import {
   ChevronRight, 
   Calendar as CalendarIcon, 
   Grid3X3, 
-  Clock
+  Clock,
+  Settings as SettingsIcon
 } from 'lucide-react';
 import { 
   format, 
@@ -30,7 +31,7 @@ import {
   endOfWeek
 } from 'date-fns';
 
-function CalendarView({ data, settings, onEventClick }) {
+function CalendarView({ data, settings, onEventClick, editMode, onOpenSettings }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState(settings.defaultView || 'month');
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -41,6 +42,29 @@ function CalendarView({ data, settings, onEventClick }) {
   const [selectedDateEvents, setSelectedDateEvents] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
   const [isVerySmall, setIsVerySmall] = useState(false);
+
+  // Track which defaultStartDate setting was last applied (to detect setting changes)
+  const appliedStartDateSetting = useRef(null);
+
+  // Set initial date based on settings
+  useEffect(() => {
+    // Only apply if the setting changed or hasn't been applied yet
+    if (settings.defaultStartDate === 'firstData' && 
+        appliedStartDateSetting.current !== 'firstData' && 
+        data?.stats?.dateRange?.start) {
+      setCurrentDate(data.stats.dateRange.start);
+      appliedStartDateSetting.current = 'firstData';
+    } else if (settings.defaultStartDate === 'today' && 
+               appliedStartDateSetting.current === null) {
+      // Only apply 'today' on initial load, not when switching back from 'firstData'
+      appliedStartDateSetting.current = 'today';
+    } else if (settings.defaultStartDate === 'today' && 
+               appliedStartDateSetting.current === 'firstData') {
+      // User switched from 'firstData' to 'today' - mark as applied but don't navigate
+      // (they can use the Today button if they want to go to today)
+      appliedStartDateSetting.current = 'today';
+    }
+  }, [data?.stats?.dateRange?.start, settings.defaultStartDate]);
 
   // Responsive detection
   useEffect(() => {
@@ -245,6 +269,17 @@ function CalendarView({ data, settings, onEventClick }) {
               </SelectItem>
             </SelectContent>
           </Select>
+          {editMode && (
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={onOpenSettings}
+              className="gap-2"
+            >
+              <SettingsIcon className="h-4 w-4" />
+              {!isMobile && 'Settings'}
+            </Button>
+          )}
         </div>
       </div>
 

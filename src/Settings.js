@@ -136,6 +136,7 @@ const PRESET_THEMES = {
 // Default settings for calendar
 export const DEFAULT_SETTINGS = {
   defaultView: 'month', // 'month', 'week', 'year', 'day'
+  defaultStartDate: 'today', // 'today' or 'firstData'
   weekStartsOn: 0, // 0 = Sunday, 1 = Monday
   timeFormat: '12h', // '12h', '24h'
   showWeekNumbers: false,
@@ -410,6 +411,23 @@ function Settings({
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">Choose the initial calendar view</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="defaultStartDate">Initial Calendar Date</Label>
+              <Select
+                value={tempSettings.defaultStartDate || 'today'}
+                onValueChange={(value) => setTempSettings({ ...tempSettings, defaultStartDate: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select initial date" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="firstData">First month with data</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">Which date the calendar opens to initially</p>
             </div>
 
             <div className="space-y-2">
